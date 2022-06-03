@@ -17,8 +17,10 @@ app.use(morgan('dev'))
 
 const auth = require('./src/routes/auth')
 const user = require('./src/routes/user')
+const game = require('./src/routes/game')
 app.use('/auth', auth);
 app.use('/user', user);
+app.use('/game', game);
 
 
 app.listen(port, function () {
