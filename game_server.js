@@ -17,16 +17,9 @@ io.use((socket, next) => {
 var game = null;
 io.on('connection', (socket) => {
   console.log('a user connected');
-  const players = [];
-  for (let [id, socket] of io.of("/").sockets) {
-    players.push({
-        id: id,
-        name: socket.name,
-    });
-    if (game == null)
-      game = new Game();
-    game.takeSeat(new Player(socket, socket.name, game));
-  }
+  if (game == null)
+    game = new Game();
+  game.takeSeat(new Player(socket, socket.name, game));
 });
 
 httpServer.listen(3000, () => {

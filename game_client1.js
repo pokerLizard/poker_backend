@@ -1,17 +1,13 @@
 import { io } from "socket.io-client";
 var socket = io('http://localhost:3000', {
   auth: {
-    name: 'fish'
+    name: 'fish1'
   }});
 
 socket.on('connect', function(){
     console.log('[%s]on connect...', socket.id);
     socket.emit('buy_in', 10);
-});
-socket.on('action_notify', (availActions, ack) => {
-  ack();
-  console.log('my turn');
-  socket.emit('call');
+    setTimeout(() => {socket.emit('start_game', {})}, 1000);
 });
 
 socket.on('disconnect', function(){
