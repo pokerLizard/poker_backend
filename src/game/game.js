@@ -83,11 +83,21 @@ export class Game {
 }
 
 class RoundPlayerState {
-    constructor(hand) {
+    constructor(player, hand) {
+        this.player = player
         this.hand = hand;
         this.folded = false;
         this.curBet = 0.0;
+        this.acted = false;
+        console.log(`${player.name} got hand ${hand}`);
     }
+}
+
+const Turns = {
+    Preflop: "preflop",
+    Flop: "flop",
+    Turn: "turn",
+    River: "river",
 }
 
 class Round {
@@ -99,6 +109,7 @@ class Round {
         // 0 is sb
         this.players = players;
         this.playerStates = {};
+        this.curTurn = null;
     }
 
     start() {
@@ -106,7 +117,7 @@ class Round {
         this.players.forEach((player) => {
             player.newRound(this);
             this.playerStates[player.name] =
-                new RoundPlayerState(this.deck.getCards(2));
+                new RoundPlayerState(player, this.deck.getCards(2));
         });
         this.preflop();
         this.flop();
@@ -138,9 +149,13 @@ class Round {
     }
 
     canEndTurn() {
-        console.log(`cur table state pot: ${this.pot}, rasieAmt: ${this.raiseAmount}`);
-        if (this.raiseAmount != 0)
-            return false;
+        console.log(`cur table state pot: ${this.pot}`);
+        for (let player in this.players)
+            if (!player.folded && player.curBet != this.lastBet)
+                return false;
+        for (let player in this.players)
+            if (!player.acted)
+                return false;
         return true;
     }
 
@@ -150,7 +165,9 @@ class Round {
 
     async playersAction(startId) {
         let numPlayers = this.players.length;
-        for (let i = startId % numPlayers; !this.canEndTurn(); i = (i + 1) % numPlayers){
+        for (let player in players)
+            player.acted = false;
+        for (let i = startId % numPlayers; !this.canEndTurn(); i = (i + 1) % numPlayers) {
             let player = this.players[i];
             console.log(`on player ${player.name}`)
             let playerState = this.playerStates[player.name];
@@ -164,6 +181,8 @@ class Round {
     }
 
     preflop() {
+        this.curTurn = Turns.Preflop;
+        console.log('start preflop');
         let sb = this.players[0]
         this.bet(sb, 0.5);
 
@@ -172,7 +191,19 @@ class Round {
 
         this.playersAction(2);
     }
-    flop() {}
-    turn() {}
-    river() {}
+
+    flop() {
+        this.curTurn = Turns.Flop;
+        console.log('start flop');
+    }
+
+    turn() {
+        this.curTurn = Turns.Turn;
+        console.log('start turn');
+    }
+
+    river() {
+        this.curTurn = Turns.River;
+        console.log('start river');
+    }
 }
