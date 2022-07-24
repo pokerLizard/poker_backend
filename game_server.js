@@ -16,9 +16,9 @@ io.use((socket, next) => {
 
 var game = null;
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  console.log(`player ${socket.name} connected`);
   if (game == null)
-    game = new Game();
+    game = new Game(io);
   game.takeSeat(new Player(socket, socket.name, game));
 });
 

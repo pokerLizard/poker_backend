@@ -19,6 +19,14 @@ export class Player {
         this.socket.on('temp_leave', this.tempLeave);
     }
 
+    state = () => {
+        return {
+            'name': this.name,
+            'active': this.active,
+            'pocket': this.pocket,
+        }
+    }
+
     newRound = (round) => {
         this.curRound = round;
     }
@@ -60,14 +68,24 @@ export class Player {
 }
 
 export class Game {
-    constructor() {
+    constructor(io) {
+        this.io = io;
         this.curRound = null;
         this.players = [];
         console.log("new game created");
     }
 
+    state = () => {
+        return {
+            'players': this.players.map(player => player.state()),
+            'curRound': this.curRound != null ? this.curRound.state() : null,
+
+        }
+    }
+
     takeSeat = (player) => {
         this.players.push(player);
+        this.io.emit('state_update', this.state());
     }
 
     start = () => {
@@ -91,6 +109,15 @@ class RoundPlayerState {
         this.acted = false;
         console.log(`${player.name} got hand ${hand}`);
     }
+    
+    state = () => {
+        return {
+            'hand': this.hand.map(card => card.toString()),
+            'folded': this.folded,
+            'curBet': this.curBet,
+            'acted': this.acted
+        }
+    }
 }
 
 const Turns = {
@@ -110,6 +137,17 @@ class Round {
         this.players = players;
         this.playerStates = {};
         this.curTurn = null;
+    }
+    state() {
+        return {
+            'pot': this.pot,
+            'lastBet': this.lastBet,
+            'raiseAmount': this.raiseAmount,
+            'playerStates': new Map(new Array.from(
+                this.playerStates,
+                ([name, state]) => [name, state.state()]
+                )),
+        }
     }
 
     start() {
