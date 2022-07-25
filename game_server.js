@@ -22,6 +22,11 @@ io.on('connection', (socket) => {
   game.takeSeat(new Player(socket, socket.name, game));
 });
 
+io.on('start_game', (socket) => {
+  console.assert(game != null);
+  game.start();
+});
+
 httpServer.listen(3000, () => {
   console.log('listening on *:3000');
 });

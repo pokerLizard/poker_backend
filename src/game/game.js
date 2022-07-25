@@ -73,6 +73,9 @@ export class Game {
         this.curRound = null;
         this.players = [];
         console.log("new game created");
+        setInterval(()=>{
+            io.emit('state_update', this.state());
+        }, 100);
     }
 
     state = () => {
@@ -85,7 +88,6 @@ export class Game {
 
     takeSeat = (player) => {
         this.players.push(player);
-        this.io.emit('state_update', this.state());
     }
 
     start = () => {
@@ -139,14 +141,14 @@ class Round {
         this.curTurn = null;
     }
     state() {
+        let playerStates = {};
+        for (const [name, state] of Object.entries(this.playerStates))
+            playerStates[name] = state.state();
         return {
             'pot': this.pot,
             'lastBet': this.lastBet,
             'raiseAmount': this.raiseAmount,
-            'playerStates': new Map(new Array.from(
-                this.playerStates,
-                ([name, state]) => [name, state.state()]
-                )),
+            'playerStates': playerStates,
         }
     }
 
@@ -203,7 +205,7 @@ class Round {
 
     async playersAction(startId) {
         let numPlayers = this.players.length;
-        for (let player in players)
+        for (let player in this.playerStates.values)
             player.acted = false;
         for (let i = startId % numPlayers; !this.canEndTurn(); i = (i + 1) % numPlayers) {
             let player = this.players[i];
