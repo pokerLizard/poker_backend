@@ -18,6 +18,9 @@ export class Deck{
 		}
     }
     getCards(count){
-        return this.cards.splice(0, count);
+        return this.cards.splice(0, count).sort((x, y) => {
+            console.log(x.value, y.value);
+            return x.value < y.value;
+        });
     }
 }
