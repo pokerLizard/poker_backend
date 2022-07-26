@@ -16,6 +16,9 @@ io.use((socket, next) => {
 
 var game = null;
 io.on('connection', (socket) => {
+  socket.on("disconnecting", (reason) => {
+    console.log(`${socket.name} disconnect`);
+  });
   console.log(`player ${socket.name} connected`);
   if (game == null)
     game = new Game(io);

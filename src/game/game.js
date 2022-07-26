@@ -17,6 +17,7 @@ export class Player {
         this.socket.on('bet', this.bet);
         this.socket.on('fold', this.fold);
         this.socket.on('temp_leave', this.tempLeave);
+        this.socket.on('leave', this.leave);
     }
 
     state = () => {
@@ -57,6 +58,10 @@ export class Player {
         this.curRound.tempLeave(this);
     }
 
+    leave = () => {
+        this.game.leave(this);
+    }
+
     actionNotify = (availActions, resolve) => {
         this.actionResolve = resolve;
         this.socket.emit('action_notify', availActions,
@@ -82,12 +87,16 @@ export class Game {
         return {
             'players': this.players.map(player => player.state()),
             'curRound': this.curRound != null ? this.curRound.state() : null,
-
         }
     }
 
     takeSeat = (player) => {
         this.players.push(player);
+    }
+
+    leave = (player) => {
+        console.log(`${player.name} leave the game`);
+        this.players.splice(this.players.indexOf(player), 1);
     }
 
     start = () => {
