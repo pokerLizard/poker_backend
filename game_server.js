@@ -2,7 +2,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 const httpServer = createServer();
 const io = new Server(httpServer, {});
-import {Game, Player} from "./src/game/game.js";
+import { Game } from "./src/game/game.js";
+import { Player } from "./src/game/player.js";
 
 
 io.use((socket, next) => {
