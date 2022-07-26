@@ -36,7 +36,9 @@ export class Game {
         console.log('new round')
         this.curRound = new Round(
             this.players.filter((player) => player.active));
-        this.curRound.start();
+        this.curRound.start().then(()=>{
+            this.newRound();
+        });
     }
 
     isPlayerInGame = (playerName) => {

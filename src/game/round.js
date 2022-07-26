@@ -37,6 +37,7 @@ export class Round {
         this.players = players;
         this.playerStates = {};
         this.curTurn = null;
+        this.numActive = 0;
     }
     state() {
         let playerStates = {};
@@ -50,17 +51,18 @@ export class Round {
         }
     }
 
-    start() {
+    async start() {
         this.deck.shuffle();
         this.players.forEach((player) => {
             player.newRound(this);
             this.playerStates[player.name] =
                 new RoundPlayerState(player, this.deck.getCards(2));
         });
-        this.preflop();
-        this.flop();
-        this.turn();
-        this.river();
+        this.numActive = this.players.length;
+        await this.preflop();
+        await this.flop();
+        await this.turn();
+        await this.river();
     }
 
     call(player) {
@@ -83,6 +85,7 @@ export class Round {
     fold(player) {
         let playerState = this.playerStates[player.name];
         playerState.folded = true;
+        this.numActive--;
         console.log(`${player.name} fold!`);
     }
 
@@ -92,12 +95,18 @@ export class Round {
 
     canEndTurn() {
         console.log(`cur table state pot: ${this.pot}`);
-        for (let player in this.players)
-            if (!player.folded && player.curBet != this.lastBet)
+        if (this.numActive < 2)
+            return true;
+        for (const [name, playerState] of Object.entries(this.playerStates)) {
+            if (!playerState.folded && playerState.curBet != this.lastBet) {
+                console.log(`can't end because of ${name} bet not enough`);
                 return false;
-        for (let player in this.players)
-            if (!player.acted)
+            }
+            else if (!playerState.folded && !playerState.acted) {
+                console.log(`can't end because of ${name} not acted`);
                 return false;
+            }
+        }
         return true;
     }
 
@@ -116,13 +125,17 @@ export class Round {
             if (!playerState.folded) {
                 await new Promise(resolve => {
                     player.actionNotify(this.availActions(), resolve);
-                    setTimeout(resolve, 60000);
+                    setTimeout(() => {
+                        console.log('times up!');
+                        this.fold(player);
+                        resolve();
+                    }, 10000);
                 });
             }
         }
     }
 
-    preflop() {
+    async preflop() {
         this.curTurn = Turns.Preflop;
         console.log('start preflop');
         let sb = this.players[0]
@@ -131,21 +144,25 @@ export class Round {
         let bb = this.players[1]
         this.bet(bb, 1);
 
-        this.playersAction(2);
+        await this.playersAction(2);
+        console.log('end preflop');
     }
 
-    flop() {
+    async flop() {
         this.curTurn = Turns.Flop;
         console.log('start flop');
+        console.log('end flop');
     }
 
-    turn() {
+    async turn() {
         this.curTurn = Turns.Turn;
         console.log('start turn');
+        console.log('end turn');
     }
 
-    river() {
+    async river() {
         this.curTurn = Turns.River;
         console.log('start river');
+        console.log('end river');
     }
 }
