@@ -19,10 +19,16 @@ io.on('connection', (socket) => {
   socket.on("disconnecting", (reason) => {
     console.log(`${socket.name} disconnect`);
   });
-  console.log(`player ${socket.name} connected`);
-  if (game == null)
+  if (game == null) {
     game = new Game(io);
-  game.takeSeat(new Player(socket, socket.name, game));
+    game.takeSeat(new Player(null, 'debug', game))
+  }
+  if (!game.isPlayerInGame(socket.name)) {
+    game.takeSeat(new Player(socket, socket.name, game));
+    console.log(`player ${socket.name} connected`);
+  }
+  else
+    console.log(`player ${socket.name} reconnected`);
 });
 
 io.on('start_game', (socket) => {

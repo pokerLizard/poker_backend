@@ -9,15 +9,17 @@ export class Player {
         this.pocket = 0.0
         this.actionResolve = null;
 
-        this.socket.on('start_game', () => {
-            game.start();
-        });
-        this.socket.on('buy_in', this.buyIn);
-        this.socket.on('call', this.call);
-        this.socket.on('bet', this.bet);
-        this.socket.on('fold', this.fold);
-        this.socket.on('temp_leave', this.tempLeave);
-        this.socket.on('leave', this.leave);
+        if (socket != null) {
+            this.socket.on('start_game', () => {
+                game.start();
+            });
+            this.socket.on('buy_in', this.buyIn);
+            this.socket.on('call', this.call);
+            this.socket.on('bet', this.bet);
+            this.socket.on('fold', this.fold);
+            this.socket.on('temp_leave', this.tempLeave);
+            this.socket.on('leave', this.leave);
+        }
     }
 
     state = () => {
@@ -64,7 +66,7 @@ export class Player {
 
     actionNotify = (availActions, resolve) => {
         this.actionResolve = resolve;
-        this.socket.emit('action_notify', availActions,
+        this.socket?.emit('action_notify', availActions,
             () => {
                 console.log(`waiting for ${this.name}'s action...`);
             }
@@ -97,6 +99,7 @@ export class Game {
     leave = (player) => {
         console.log(`${player.name} leave the game`);
         this.players.splice(this.players.indexOf(player), 1);
+        this.curRound?.leave(player);
     }
 
     start = () => {
@@ -108,6 +111,10 @@ export class Game {
         this.curRound = new Round(
             this.players.filter((player) => player.active));
         this.curRound.start();
+    }
+
+    isPlayerInGame = (playerName) => {
+        return this.players.find(player => player.name == playerName);
     }
 }
 
@@ -195,6 +202,10 @@ class Round {
         let playerState = this.playerStates[player.name];
         playerState.folded = true;
         console.log(`${player.name} fold!`);
+    }
+
+    leave(player) {
+        this.fold(player);
     }
 
     canEndTurn() {
